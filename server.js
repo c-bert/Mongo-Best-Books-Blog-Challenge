@@ -1,3 +1,6 @@
+'use strict';
+
+const express = require("express");
 const mongoose = require('mongoose');
 
 // Mongoose internally uses a promise-like object,
@@ -60,9 +63,12 @@ app.get('/best-books-blog', (req, res) => {
     }
     //use zip file
     BooksBlog.create({
-        title: ,
-        content: ,
-        author: 
+        title: req.body.title,
+        content: req.body.content,
+        author: {
+            firstName: req.body.author.firstName,
+            lastName: req.body.author.lastName
+        }
 
     })
         .then(data => res.status(201).json (data.serialize()))
