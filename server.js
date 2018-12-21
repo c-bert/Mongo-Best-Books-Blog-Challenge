@@ -111,3 +111,57 @@ app.get('/best-books-blog', (req, res) => {
 app.use("*", function(req, res) {
     res.status(404).json({ message: "Not Found" });
   });
+
+  // closeServer needs access to a server object, but that only
+// gets created when `runServer` runs, so we declare `server` here
+// and then assign a value to it in run
+let server;
+
+function runServer(databaseURL, port = PORT){
+    //Promise b/c this is an asychronous series of event
+    return new Promise ((resolve,reject) => {
+        mongoose.connect(
+            databaseURL,
+            err => {
+                if (err) {
+                    return reject(err);
+                }
+                server = app
+                .listen(port, () => {
+                    console.log(`Your app is listening on port ${port}`);
+                    resolve();
+                })
+                //on is listening to the server
+                .on("error", err => {
+                    mongoose.disconnect();
+                    reject(err);
+                });
+            }
+        );
+    });
+}
+
+// this function closes the server, and returns a promise. 
+
+function closeServer(){
+    return mongoose.disconnect().then(() => {
+        return new Promise ((resolve, reject) => {
+            console.log("Closing Server");
+            server.close(err => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    });
+}
+
+// if server.js is called directly (aka, with `node server.js`), this block
+// runs. but we also export the runServer command so other code (for instance, test code) can start the server as needed.
+if (require.main === module) {
+    runServer(DATABASE_URL).catch(err =>
+        console.error(err));
+}
+
+module.exports = { app, runServer, closeServer };
