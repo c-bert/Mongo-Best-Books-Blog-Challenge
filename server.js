@@ -18,16 +18,15 @@ app.use(express.json());
 //GET request to /best-books-blog
 app.get('/best-books-blog', (req, res) => {
     const filters = {};
-    const queryableFields = ['title', 'content', 'author', 'created'];
+    const queryableFields = ['title', 'author','content' ];
     queryableFields.forEach(field => {
         if (req.query[field]){
             filters[field] = req.query[field];
         }
-    })
-});
+    });
     BooksBlog
         .find(filters)
-        .then (data => res.json (
+        .then(data => res.json (
             //blog here is the variable
             //that's returned on our request
             data.map(blog => blog.serialize())
@@ -36,6 +35,7 @@ app.get('/best-books-blog', (req, res) => {
             console.error(err);
             res.status(500).json({message: 'Internal server error'})
         });
+    });        
  // can also request by ID
  app.get('/best-books-blog/:id', (req, res) => {
      BooksBlog
