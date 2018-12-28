@@ -10,15 +10,16 @@ mongoose.Promise = global.Promise;
 // config.js is where we control constants for entire
 // app like PORT and DATABASE_URL
 const {PORT, DATABASE_URL} = require('./config');
-const {BooksBlog} = require('./models');
+const {BooksBlog, Author} = require('./models');
 
 const app = express();
 app.use(express.json());
 
-//GET request to /best-books-blog
-app.get('/best-books-blog', (req, res) => {
+//GET request to /posts
+app.get('/posts', (req, res) => {
     const filters = {};
-    const queryableFields = ['title', 'author','content' ];
+    console.log("route reached");
+    const queryableFields = ['title', 'author','content'];
     queryableFields.forEach(field => {
         if (req.query[field]){
             filters[field] = req.query[field];
@@ -26,7 +27,7 @@ app.get('/best-books-blog', (req, res) => {
     });
     BooksBlog
         .find(filters)
-        .then(data => res.json (
+        .then(data =>res.json (
             //blog here is the variable
             //that's returned on our request
             data.map(blog => blog.serialize())
@@ -37,7 +38,7 @@ app.get('/best-books-blog', (req, res) => {
         });
     });        
  // can also request by ID
- app.get('/best-books-blog/:id', (req, res) => {
+ app.get('/posts/:id', (req, res) => {
      BooksBlog
      .findbyId(req.params.id)
      .then (data => res.json (
@@ -51,7 +52,7 @@ app.get('/best-books-blog', (req, res) => {
     });
  });
  
- app.post('/best-books-blog', (req, res) => {
+ app.post('/posts', (req, res) => {
     const requiredFields  = ['title', 'content', 'author'];
     for (let i=0; i < requiredFields.length; i++){
         const field = requiredFields[i];
@@ -65,7 +66,8 @@ app.get('/best-books-blog', (req, res) => {
     BooksBlog.create({
         title: req.body.title,
         content: req.body.content,
-        author: {
+        author: 
+        {
             firstName: req.body.author.firstName,
             lastName: req.body.author.lastName
         }
@@ -78,7 +80,7 @@ app.get('/best-books-blog', (req, res) => {
         });
  });
 
- app.put('/best-books-blog/:id', (req, res) => {
+ app.put('/posts/:id', (req, res) => {
       // ensure that the id in the request path and the one in request body match
       if(!(req.params.id && req.body.id && req.params.id === req.body.id)) {
           const message = `Request path id (${req.params.id}) and request body id ` + `(${req.body.id}) must match`;
@@ -106,7 +108,7 @@ app.get('/best-books-blog', (req, res) => {
       .catch(err => res.status(500).json({ message: "Internal server error"}));
  });
 
- app.delete('/best-books-blog/:id', (req, res) => {
+ app.delete('/posts/:id', (req, res) => {
      BooksBlog.findByIDAndRemove(req.params.id)
      .then(data => res.status(204).end())
      .catch(err => res.status(500).json({ message: "Internal server error" }));
