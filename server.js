@@ -15,6 +15,94 @@ const {BooksBlog, Author} = require('./models');
 const app = express();
 app.use(express.json());
 
+//GET request to /author
+app.get('/author', (req, res) => {
+    const filters = {};
+    console.log("authors route reached");
+    const queryableFields = ['firstName', 'lastName'];
+    queryableFields.forEach(field => {
+        if (req.query[field]){
+            filters[field] = req.query[field];
+        }
+    });
+    Author
+        .find(filters)
+        .then (data => res.json (
+            data.map(blog => blog.searlize())
+        ))
+        .catch(err => {
+            console.error(err);
+            res.status(500).json({message: 'Internal Server Error'})
+        });
+    });    
+//can also GET request by ID
+app.get('/author/:id', (req, res) => {
+    console.log("author " + req.params.id);
+    let id = mongoose.Types.ObjectId(req.params.id);
+    Author
+    .findById(id)
+    .then (data => {
+        console.log("this is author data " + data);
+        res.json ({
+            id: data._id,
+            author: data.authorName
+        })
+    })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({message: 'Internal Server Error'});
+    });
+});
+//POST request to /author
+app.post('/author', (req, res) => {
+    const requiredFields = [firstName, lastName];
+    for (let i=0; i < requiredFields.length; i++){
+        const field = requiredFields[i];
+        if (!(field in req.body)) {
+            const message = `Missing \`${field}\` in request body`;
+            console.error(message);
+            return res.status(400).send(message);
+        }
+    }
+    Author.create({
+        firstName: req.body.firstName,
+        lastName: req.body.lastName
+    })
+    .then(author => res.status(201).json({
+       firstName: author.firstName,
+       lastName: author.lastName
+    }))
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({ message: "Internal server error"});
+    });
+});
+//PUT request to /author
+app.put ('put/:id', (req, res) => {
+    if(!(req.params.id && req.body.id && req.params.id === req.body.id)) {
+        const message = `Requst path id (${req.params.id}) and request body id` + `(${req.body.id}) must match`;
+        console.log(message);
+        return res.status(400).json( {message:message})
+    }
+    const toUpdate = {};
+    const updateableFields = ['firstName', 'lastName'];
+
+    updateableFields.forEach(field => {
+        if (field in req.body) {
+            toUpdate[field] = req.body[field];
+        }
+    });
+    Author
+    .findByIdAndUpdate(req.params.id, { $set: toUpdate })
+    .then(data => res.status(204).end())
+    .catch(err => res.status(500).json({ message: "Internal Server Error"}));
+});
+
+app. delete('/author/:id', (req, res) => {
+    Author.findByIdAndRemove(req.params.id)
+    .then(data => res.status(204).end())
+    .catch(err => res.status(500).json( { message: "Intneral Server Error"}));
+});
 //GET request to /posts
 app.get('/posts', (req, res) => {
     const filters = {};
@@ -74,16 +162,11 @@ app.get('/posts', (req, res) => {
     BooksBlog.create({
         title: req.body.title,
         content: req.body.content,
-        author: 
-        {
-            firstName: req.body.author.firstName,
-            lastName: req.body.author.lastName
-        }
-
+        author: req.body.author
     })
         .then(data => res.status(201).json({
             id: data.id,
-            author: `${data.firstName} ${data.lastName}`,
+            author: data.author,
             content: data.content,
             title: data.title,
             comments: data.comments
@@ -117,13 +200,13 @@ app.get('/posts', (req, res) => {
 
       BooksBlog
       //all key/value paris in toUpdate will be updated (which is what `$set` does)
-      .findByIDAndUpdate(req.params.id, { $set: toUpdate })
+      .findByIdAndUpdate(req.params.id, { $set: toUpdate })
       .then(data => res.status(204).end())
       .catch(err => res.status(500).json({ message: "Internal server error"}));
  });
 
  app.delete('/posts/:id', (req, res) => {
-     BooksBlog.findByIDAndRemove(req.params.id)
+     BooksBlog.findByIdAndRemove(req.params.id)
      .then(data => res.status(204).end())
      .catch(err => res.status(500).json({ message: "Internal server error" }));
  });
