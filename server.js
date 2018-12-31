@@ -39,13 +39,21 @@ app.get('/posts', (req, res) => {
     });        
  // can also request by ID
  app.get('/posts/:id', (req, res) => {
+     console.log(req.params.id);
+     //https://stackoverflow.com/questions/6578178/node-js-mongoose-js-string-to-objectid-function
+     let id = mongoose.Types.ObjectId(req.params.id);
      BooksBlog
-     .findbyId(req.params.id)
-     .then (data => res.json (
-        //blog here is the variable
-        //that's returned on our request
-        data.map(blog => blog.serialize())
-    ))
+     .findById(id)
+     .then(data => {
+         console.log("this is data " + data);
+         res.json ({
+             id: data._id,
+             author: data.authorName,
+             content: data.content,
+             title: data.title,
+             comments: data.comments
+         }
+    )})
     .catch(err => {
         console.error(err);
         res.status(500).json({message:'Internal sever error'})
@@ -73,7 +81,13 @@ app.get('/posts', (req, res) => {
         }
 
     })
-        .then(data => res.status(201).json (data.serialize()))
+        .then(data => res.status(201).json({
+            id: data.id,
+            author: `${data.firstName} ${data.lastName}`,
+            content: data.content,
+            title: data.title,
+            comments: data.comments
+        }))
         .catch(err => {
             console.error(err);
             res.status(500).json({ message: "Internal server error"});

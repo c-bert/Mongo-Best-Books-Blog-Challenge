@@ -12,7 +12,7 @@ const booksBlogSchema = mongoose.Schema({
     title: {type: String, required: true},
     content: {type: String, required: true},
     author: {type: mongoose.Schema.Types.ObjectId, ref: 'Author'},
-    created: {type: Date, default: Date.now},
+    // created: {type: Date, default: Date.now},
     comments: [commentsSchema]
 });
 
@@ -21,6 +21,11 @@ booksBlogSchema.pre('find', function(next) {
     this.populate('author');
     next();
   });
+
+  booksBlogSchema.pre('findOne', function(next) {
+    this.populate('author');
+    next();
+  });  
 
 booksBlogSchema.virtual('authorName').get(function() {
     //concatenate first and last name
@@ -31,10 +36,12 @@ booksBlogSchema.virtual('authorName').get(function() {
 // exposes *some* of the fields we want from the underlying data
 booksBlogSchema.methods.serialize = function(){
     return {
+        id: this._id,
         title: this.title,
         author: this.author,
         content: this.content,
-        created: this.created
+        created: this.created,
+        comments: this.comments
     };
 };
 // all instance methods and virtual properties on our schema must be defined *before* we make the call to `.model`.
