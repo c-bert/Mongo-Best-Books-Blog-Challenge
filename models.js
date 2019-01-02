@@ -54,6 +54,11 @@ const AuthorSchema = mongoose.Schema({
 //serialize the userName
 AuthorSchema.methods.serialize = function(){
     return {
+        id: this._id,
+        author: {
+            firstName: this.firstName,
+            lastName: this.lastName
+        },
         userName: `${this.firstName}.${this.lastName}`
     }
 };

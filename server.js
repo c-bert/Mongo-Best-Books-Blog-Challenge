@@ -28,7 +28,7 @@ app.get('/author', (req, res) => {
     Author
         .find(filters)
         .then (data => res.json (
-            data.map(blog => blog.searlize())
+            data.map(blog => blog.serialize())
         ))
         .catch(err => {
             console.error(err);
@@ -55,7 +55,8 @@ app.get('/author/:id', (req, res) => {
 });
 //POST request to /author
 app.post('/author', (req, res) => {
-    const requiredFields = [firstName, lastName];
+    //firstName is not defined authorName is not defined
+    const requiredFields = ['firstName', 'lastName'];
     for (let i=0; i < requiredFields.length; i++){
         const field = requiredFields[i];
         if (!(field in req.body)) {
@@ -149,7 +150,7 @@ app.get('/posts', (req, res) => {
  });
  
  app.post('/posts', (req, res) => {
-    const requiredFields  = ['title', 'content', 'author'];
+    const requiredFields  = ['title', 'content', 'author_id'];
     for (let i=0; i < requiredFields.length; i++){
         const field = requiredFields[i];
         if (!(field in req.body)) {
@@ -158,22 +159,32 @@ app.get('/posts', (req, res) => {
             return res.status(400).send(message);
         }
     }
+    let author_id = mongoose.Types.ObjectId(req.body.author_id);
+    Author
+    .findById(author_id)
+    .then(author => {
+        console.log("this is author " + author);
     //use zip file
-    BooksBlog.create({
-        title: req.body.title,
-        content: req.body.content,
-        author: req.body.author
-    })
-        .then(data => res.status(201).json({
-            id: data.id,
-            author: data.author,
-            content: data.content,
-            title: data.title,
-            comments: data.comments
-        }))
+        BooksBlog.create({
+            title: req.body.title,
+            content: req.body.content,
+            author: req.body.author_id
+        })
+            .then(data => res.status(201).json({
+                id: data.id,
+                author: {firstName: author.firstName, lastName: author.lastName},
+                content: data.content,
+                title: data.title,
+                comments: data.comments
+            }))
+            .catch(err => {
+                console.error(err);
+                res.status(500).json({ message: "Internal server error"});
+            });
+        })
         .catch(err => {
             console.error(err);
-            res.status(500).json({ message: "Internal server error"});
+            res.status(400).json({ message: "Author not found"});
         });
  });
 
